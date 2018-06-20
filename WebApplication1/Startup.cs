@@ -32,12 +32,6 @@ namespace WebApplication1
             services.AddDbContext<Models.ApplicationDbContext>(options =>
                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
-            //services.AddIdentity<User, IdentityRole>()
-            //    .AddEntityFrameworkStores<IdentityContext>();
-
-            // services.AddIdentity<IdentityUser, IdentityRole>()
-            //.AddEntityFrameworkStores<IdentityDbContext>();
-
             services.AddIdentity<IdentityUser, IdentityRole>()
            .AddEntityFrameworkStores<ApplicationDbContext>()
            .AddDefaultTokenProviders();

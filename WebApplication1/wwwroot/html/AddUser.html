@@ -16,12 +16,13 @@
         <label>Password: </label><br /><br />
         <input type="password" id="password" name="name" /><br /><br />
 
-        <input type="button" value="Register" onclick="return RegisterFunc();" /><br /><br />
+        <input type="button" value="AddUser" onclick="return AddUserFunc();" /><br /><br />
 
     </form>
 
     <script>
-        function RegisterFunc() {
+
+        function AddUserFunc() {
 
             var name = $("#name").val();
             var email = $("#email").val();
