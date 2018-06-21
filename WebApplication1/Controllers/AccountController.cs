@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using WebApplication1.services;
 
 namespace WebApplication1.Controllers
 {
@@ -17,17 +18,19 @@ namespace WebApplication1.Controllers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
 
-        public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration)
+        public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IEmailService emailService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
             _configuration = configuration;
+            _emailService = emailService;
         }
 
         [HttpPost("Register")]
-        public async Task<JsonResult> Register(string name, string email, string password)
+        public async Task Register(string name, string email, string password)
         {
             IdentityUser User = new IdentityUser { Email = email, UserName = name };
 
@@ -36,23 +39,50 @@ namespace WebApplication1.Controllers
             await _roleManager.CreateAsync(roleUser);
 
             var result =  _userManager.CreateAsync(User, password);
-      
+
             if (result != null)
             {
-                //var identity = GetIdentityRegister(name, password);
-                //if (identity == null)
-                //{
+                var identity = GetIdentityRegister(name, password);
+
+                if (identity == null)
+                {
                     AddToRoleAsyncFunc(User, roleUser);
-                    //identity = SendClaimsInRegister(name);
+                    identity = SendClaimsInRegister(name);
 
-                    //var code = await _userManager.GenerateEmailConfirmationTokenAsync(User);
-            
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(User);
 
-                //}
+                    var getUserId = User.Id;
+
+                    var callbackUrl = "http://localhost:51245/html/confirmation.html?UserId=" + User.Id + "&UserCode=" + code;
+
+                    string subject = "localhost notification";
+                    string message = "Hello, new member. You had been applied to Strateix project. Follow the link to confirm your data ";
+
+                    try
+                    {
+                        await _emailService.SendEmailAsync(email, subject, message, callbackUrl);
+
+                    }
+                    catch (Exception exc)
+                    {
+                        var a = exc;
+                    }
+
+                    //IdentityMessage oumessage;
+                    //emailService.SendAsync(oumessage);
+
+                }
             }
 
-            return Json(System.Net.HttpStatusCode.Accepted);
         }
+        
+        [HttpGet("")]
+        public JsonResult HandleUserData(string userid, string code)
+        {
+            return Json("");
+        }
+    
+        
 
         public void AddToRoleAsyncFunc(IdentityUser User, IdentityRole roleUser)
         {
