@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using WebApplication1.services;
 
 namespace WebApplication1.Controllers
 {
@@ -34,18 +35,29 @@ namespace WebApplication1.Controllers
             var roleUser = new IdentityRole { Name = "user" };
 
             await _roleManager.CreateAsync(roleUser);
-   
+
             var result =  _userManager.CreateAsync(User, password);
       
             if (result != null)
             {
-                var identity = GetIdentityRegister(name, password);
-                if (identity == null)
-                {
+                //var identity = GetIdentityRegister(name, password);
+                //if (identity == null)
+                //{
                     AddToRoleAsyncFunc(User, roleUser);
-                    identity = SendClaimsInRegister(name);
+                    //identity = SendClaimsInRegister(name);
 
-                }
+                    //var code = await _userManager.GenerateEmailConfirmationTokenAsync(User);
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(User);
+                    var callbackUrl = Url.Action(
+                        "ConfirmEmail",
+                        "Account",
+                        new { userId = User.Id, code = code },
+                        protocol: HttpContext.Request.Scheme);
+                    EmailService emailService = new EmailService();
+                    await emailService.SendEmailAsync(User.Email, "Confirm your account",
+                        $"Подтвердите регистрацию, перейдя по ссылке: <a href='{callbackUrl}'>link</a>");
+
+                //}
             }
 
             return Json(System.Net.HttpStatusCode.Accepted);
