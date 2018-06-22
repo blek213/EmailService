@@ -51,22 +51,21 @@ namespace WebApplication1.Controllers
                     AddToRoleAsyncFunc(User, roleUser);
                     //identity = SendClaimsInRegister(name);
 
-                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(User);
+                    var code = await _userManager.GeneratePasswordResetTokenAsync(User);
 
-                    // added HTML encoding
-                    string codeHtmlVersion = HttpUtility.UrlEncode(code);
+                //added HTML encoding
+                string codeHtmlVersion = HttpUtility.UrlEncode(code);
 
-                    var getUserId = User.Id;
+                var getUserId = User.Id;
 
-                    var callbackUrl = "http://localhost:51245/html/confirmation.html?UserId=" + User.Id + "&UserCode=" + codeHtmlVersion;
+                    var callbackUrl = "http://localhost:51245/html/changePassword.html?UserId=" + User.Id + "&UserCode=" + codeHtmlVersion;
 
                     string subject = "localhost notification";
                     string message = "Hello, new member. You had been applied to Strateix project. Follow the link to confirm your data ";
 
                     try
                     {
-                        await _emailService.SendEmailAsync(email, subject, message, callbackUrl);
-                    
+                        await _emailService.SendEmailAsync(email, subject, message, callbackUrl);                   
                     }
                     catch (Exception exc)
                     {
@@ -76,29 +75,22 @@ namespace WebApplication1.Controllers
             }
 
         }
-       
-        [HttpPost("ConfirmUserCode")]
-        public async Task<JsonResult> ConfirmUserCode(string UserId,string UserCode)
+
+        [HttpPost("ChangeUserPassword")]
+        public async Task<JsonResult> ChangeUserPassword(string UserId, string NewPassword, string UserCode)
         {
-
-            if(UserId == null||UserCode == null)
-            {
-                return Json(HttpStatusCode.BadRequest);
-            }
-
             var user = await _userManager.FindByIdAsync(UserId);
-
+            
             if(user == null)
             {
                 return Json(HttpStatusCode.BadRequest);
             }
 
-            var result= await _userManager.ConfirmEmailAsync(user, UserCode);
+            var result = await _userManager.ResetPasswordAsync(user, UserCode, NewPassword);
 
             if (result.Succeeded)
             {
                 return Json(HttpStatusCode.Accepted);
-
             }
 
             return Json(HttpStatusCode.BadRequest);
