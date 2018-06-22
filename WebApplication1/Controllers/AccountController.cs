@@ -50,7 +50,7 @@ namespace WebApplication1.Controllers
                     AddToRoleAsyncFunc(User, roleUser);
                     identity = SendClaimsInRegister(name);
 
-                    var code = await _userManager.GenerateUserTokenAsync(User, TokenOptions.DefaultProvider,"Code");
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(User);
                                 
                     var getUserId = User.Id;
 
@@ -61,17 +61,13 @@ namespace WebApplication1.Controllers
 
                     try
                     {
-                        await _emailService.SendEmailAsync(email, subject, message, callbackUrl);
-                    
+                        await _emailService.SendEmailAsync(email, subject, message, callbackUrl);              
                     }
 
                     catch (Exception exc)
                     {
                         var a = exc;
                     }
-
-                    //IdentityMessage oumessage;
-                    //emailService.SendAsync(oumessage);
 
                 }
             }
