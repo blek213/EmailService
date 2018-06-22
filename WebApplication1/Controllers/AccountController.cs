@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -49,8 +50,8 @@ namespace WebApplication1.Controllers
                     AddToRoleAsyncFunc(User, roleUser);
                     identity = SendClaimsInRegister(name);
 
-                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(User);
-
+                    var code = await _userManager.GenerateUserTokenAsync(User, TokenOptions.DefaultProvider,"Code");
+                                
                     var getUserId = User.Id;
 
                     var callbackUrl = "http://localhost:51245/html/confirmation.html?UserId=" + User.Id + "&UserCode=" + code;
@@ -61,8 +62,9 @@ namespace WebApplication1.Controllers
                     try
                     {
                         await _emailService.SendEmailAsync(email, subject, message, callbackUrl);
-
+                    
                     }
+
                     catch (Exception exc)
                     {
                         var a = exc;
@@ -75,15 +77,27 @@ namespace WebApplication1.Controllers
             }
 
         }
-        
-        [HttpGet("")]
-        public JsonResult HandleUserData(string userid, string code)
+       
+        [HttpPost("ConfirmUserCode")]
+        public async Task<JsonResult> ConfirmUserCode(string UserId,string UserCode)
         {
-            return Json("");
-        }
-    
-        
+            if(UserId == null||UserCode == null)
+            {
+                return Json(HttpStatusCode.BadRequest);
+            }
 
+            var user = await _userManager.FindByIdAsync(UserId);
+
+            if(user == null)
+            {
+                return Json(HttpStatusCode.BadRequest);
+            }
+
+            var result= await _userManager.ConfirmEmailAsync(user,UserCode);
+
+            return Json(HttpStatusCode.Accepted);
+        }
+ 
         public void AddToRoleAsyncFunc(IdentityUser User, IdentityRole roleUser)
         {
             _userManager.AddToRoleAsync(User, roleUser.Name);

@@ -36,7 +36,6 @@ namespace WebApplication1.services
                     client.Port = 587;
                     client.EnableSsl = true;
                    
-
                     using (var emailMessage = new MailMessage())
                     {
                         emailMessage.IsBodyHtml = true;
@@ -47,6 +46,7 @@ namespace WebApplication1.services
                         emailMessage.Body = message + "<a href='" + callbackUrl + "'>" + "Confirm data" + "</a>";
                         client.Send(emailMessage);
                     }
+
                     await Task.CompletedTask;
 
                 }
