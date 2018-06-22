@@ -9,10 +9,9 @@
     <script type="text/javascript">
         var currentUrl = window.location.href;
 
+       
         var UserId = ParseUserIdFromUrl(currentUrl); //Парсим UserId из строки
         var UserCode = ParseUserCodeFromUrl(currentUrl); //Парсим UserCode из строки
-
-
 
         setTimeout(GetResult(), 1);
 
@@ -70,6 +69,7 @@
 
             var UserCode = CurrentUrl.slice(GetIndexBeforeCode, GetLastIndex);
 
+            return UserCode;
         }
 
     </script>

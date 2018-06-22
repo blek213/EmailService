@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System.Web;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -39,22 +40,25 @@ namespace WebApplication1.Controllers
 
             await _roleManager.CreateAsync(roleUser);
 
-            var result =  _userManager.CreateAsync(User, password);
-
+            var result =  await _userManager.CreateAsync(User, password);
+            
             if (result != null)
             {
-                var identity = GetIdentityRegister(name, password);
+                //var identity = GetIdentityRegister(name, password);
 
-                if (identity == null)
-                {
+                //if (identity == null)
+                //{
                     AddToRoleAsyncFunc(User, roleUser);
-                    identity = SendClaimsInRegister(name);
+                    //identity = SendClaimsInRegister(name);
 
-                    var code = await _userManager.GenerateUserTokenAsync(User, TokenOptions.DefaultProvider,"Code");
-                                
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(User);
+
+                    // added HTML encoding
+                    string codeHtmlVersion = HttpUtility.UrlEncode(code);
+
                     var getUserId = User.Id;
 
-                    var callbackUrl = "http://localhost:51245/html/confirmation.html?UserId=" + User.Id + "&UserCode=" + code;
+                    var callbackUrl = "http://localhost:51245/html/confirmation.html?UserId=" + User.Id + "&UserCode=" + codeHtmlVersion;
 
                     string subject = "localhost notification";
                     string message = "Hello, new member. You had been applied to Strateix project. Follow the link to confirm your data ";
@@ -64,16 +68,11 @@ namespace WebApplication1.Controllers
                         await _emailService.SendEmailAsync(email, subject, message, callbackUrl);
                     
                     }
-
                     catch (Exception exc)
                     {
                         var a = exc;
                     }
-
-                    //IdentityMessage oumessage;
-                    //emailService.SendAsync(oumessage);
-
-                }
+                //}
             }
 
         }
@@ -81,6 +80,7 @@ namespace WebApplication1.Controllers
         [HttpPost("ConfirmUserCode")]
         public async Task<JsonResult> ConfirmUserCode(string UserId,string UserCode)
         {
+
             if(UserId == null||UserCode == null)
             {
                 return Json(HttpStatusCode.BadRequest);
@@ -93,9 +93,15 @@ namespace WebApplication1.Controllers
                 return Json(HttpStatusCode.BadRequest);
             }
 
-            var result= await _userManager.ConfirmEmailAsync(user,UserCode);
+            var result= await _userManager.ConfirmEmailAsync(user, UserCode);
 
-            return Json(HttpStatusCode.Accepted);
+            if (result.Succeeded)
+            {
+                return Json(HttpStatusCode.Accepted);
+
+            }
+
+            return Json(HttpStatusCode.BadRequest);
         }
  
         public void AddToRoleAsyncFunc(IdentityUser User, IdentityRole roleUser)
